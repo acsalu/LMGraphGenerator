@@ -4,6 +4,9 @@ isFirstTime = true;
 
 infowindow = null;
 
+defaultPinColor = "FE7569";
+highlightPinColor = "FFFF46";
+
 function initialize() {
     var mapOptions = {
       center: new google.maps.LatLng(23.597, 121.644),
@@ -36,16 +39,29 @@ function initialize() {
 function placeMarker(location) {
     var marker = new google.maps.Marker({
       position: location,
-      map: map
+      map: map,
+      draggable: true,
+      icon: getPinIcon(defaultPinColor)
     });
     //put the marker and also add onclick listener for it
     /*******************Acsa put the pressed marker function here ******/
-    google.maps.event.addListener(marker, "click", function() {
+    google.maps.event.addListener(marker, "click", function(event) {
         console.log("marker pressed");
-	
+        var pinColor = "AAAAAA";
+        marker.setIcon(getPinIcon(highlightPinColor));
+    });
+
+    google.maps.event.addListener(marker, "dragend", function(event) {
+        console.log("marker update");
     });
 }
 
+function getPinIcon(pinColor) {
+    return new google.maps.MarkerImage("http://chart.apis.google.com/chart?chst=d_map_pin_letter&chld=%E2%80%A2|" + pinColor,
+            new google.maps.Size(21, 34),
+            new google.maps.Point(0,0),
+            new google.maps.Point(10, 34));
+}
 
 function createNode(lat, lng) {
     console.log("create-node");
