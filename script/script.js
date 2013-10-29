@@ -2,9 +2,11 @@ var map;
 canSelectPin = false;
 isFirstTime = true;
 
+infowindow = null;
+
 function initialize() {
     var mapOptions = {
-      center: new google.maps.LatLng(23.597, 161.644),
+      center: new google.maps.LatLng(23.597, 121.644),
       zoom: 8,
       mapTypeId: google.maps.MapTypeId.ROADMAP
     };
@@ -12,16 +14,21 @@ function initialize() {
         mapOptions);
 
     google.maps.event.addListener(map, 'click', function(event) {
-	if(isFirstTime == true){
+
+        if (infowindow) {
+            infowindow.close();
+        }
+        infowindow = new google.maps.InfoWindow();
+
+    	if(isFirstTime == true){
             placeMarker(event.latLng );
             createNode( event.latLng.lat(),event.latLng.lng() );
-	    isFirstTime = false;
-	}
-	else if (canSelectPin == true){
-	    placeMarker( event.latLng );
-	    createNode( event.latLng.lat(),event.latLng.lng() );
-	}
-
+    	    isFirstTime = false;
+    	}
+    	else if (canSelectPin == true){
+    	    placeMarker( event.latLng );
+    	    createNode( event.latLng.lat(),event.latLng.lng() );
+    	}
     });
 }
 
@@ -37,11 +44,15 @@ function placeMarker(location) {
 function createNode(lat, lng) {
     console.log("create-node");
 
-    var Node = Parse.Object.extend("Node");
+    var Node = Parse.Object.extend("Node", {
+        getId: function() {
+            return this.get("objectId");
+        }
+    });
     var node = new Node();
     node.save({lat:lat, lng:lng}, {
         success: function(object) {
-            console.log("Node(" + lat + ", " + lng + ") saved!");
+            console.log("Node " + node.getId() +  " (" + lat + ", " + lng + ") saved!");
           }
     });
 
