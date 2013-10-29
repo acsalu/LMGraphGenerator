@@ -66,7 +66,9 @@ function updateNode(node, parms) {
 
 }
 
-
+function toggleSelectPinBtn() {
+   $('#select-pin').toggleClass("btn-on", canSelectPin);
+}
 
 $(document).ready(function() {
     Parse.initialize("9viWGl0x5YuJqhwg8dbYG16snlA2WG5X26JJrI7d", "u99KHyIjasLOmTlfePq01sk3k1ZqsRUyHlhmkaS3");
@@ -77,7 +79,8 @@ $(document).ready(function() {
 
     $('#select-pin').click(function() {
         console.log("select-pin");
-
+        canSelectPin = !canSelectPin;
+        toggleSelectPinBtn();
     });
 
     $('#unselect-pin').click(function() {
