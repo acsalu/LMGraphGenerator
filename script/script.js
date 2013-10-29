@@ -1,5 +1,6 @@
 var map;
-boolean canSelectPin = true;
+canSelectPin = false;
+isFirstTime = true;
 
 function initialize() {
     var mapOptions = {
@@ -11,8 +12,16 @@ function initialize() {
         mapOptions);
 
     google.maps.event.addListener(map, 'click', function(event) {
+	if(isFirstTime == true){
             placeMarker(event.latLng );
             createNode( event.latLng.lat(),event.latLng.lng() );
+	    isFirstTime = false;
+	}
+	else if (canSelectPin == true){
+	    placeMarker( event.latLng );
+	    createNode( event.latLng.lat(),event.latLng.lng() );
+	}
+
     });
 }
 
