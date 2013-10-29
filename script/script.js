@@ -38,6 +38,12 @@ function placeMarker(location) {
       position: location,
       map: map
     });
+    //put the marker and also add onclick listener for it
+    /*******************Acsa put the pressed marker function here ******/
+    google.maps.event.addListener(marker, "click", function() {
+        console.log("marker pressed");
+	
+    });
 }
 
 
