@@ -27,9 +27,29 @@ $(document).ready(function() {
 		var node = new Node();
 		node.save({lat:lat, lng:lng}, {
 			success: function(object) {
-		    console.log("Node(" + lat + ", " + lng + ") saved!");
-		  }
+		    	console.log("Node(" + lat + ", " + lng + ") saved!");
+		  	}
 		});
+
+		return node;
+	}
+
+	function createEdge(node1, node2) {
+		console.log("create-edge");
+
+		var Edge = Parse.Object.extend("Edge");
+		var edge = new Edge();
+		edge.save({node1:node1, node2:node2}), {
+	   		success: function(object) {
+                
+			}
+		}
+
+
+	}
+
+	function updateNode(node, parms) {
+
 	}
 
 });
