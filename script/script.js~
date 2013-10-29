@@ -1,5 +1,8 @@
 $(document).ready(function() {
 	Parse.initialize("9viWGl0x5YuJqhwg8dbYG16snlA2WG5X26JJrI7d", "u99KHyIjasLOmTlfePq01sk3k1ZqsRUyHlhmkaS3");
+<<<<<<< HEAD
+});
+=======
 
 	$('#place-pin').click(function() {
 		console.log("place-pin");
@@ -13,23 +16,18 @@ $(document).ready(function() {
 		console.log("unselect-pin");
 	});
 
+	$('#create-node').click(createNode);
 
-
-
-	$('#create-node').click(function() {
-		createNode(23, 120);
-	});
-
-	function createNode(lat, lng) {
+	function createNode() {
 		console.log("create-node");
-
-		var Node = Parse.Object.extend("Node");
-		var node = new Node();
-		node.save({lat:lat, lng:lng}, {
-			success: function(object) {
-		    console.log("Node(" + lat + ", " + lng + ") saved!");
+		var TestObject = Parse.Object.extend("TestObject");
+		var testObject = new TestObject();
+		testObject.save({foo: "bar"}, {
+		  success: function(object) {
+		    alert("yay! it worked");
 		  }
 		});
 	}
 
 });
+>>>>>>> 92292031e7a307a1aefabece00530b0c09258559
