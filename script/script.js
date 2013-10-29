@@ -13,15 +13,21 @@ $(document).ready(function() {
 		console.log("unselect-pin");
 	});
 
-	$('#create-node').click(createNode);
 
-	function createNode() {
+
+
+	$('#create-node').click(function() {
+		createNode(23, 120);
+	});
+
+	function createNode(lat, lng) {
 		console.log("create-node");
-		var TestObject = Parse.Object.extend("TestObject");
-		var testObject = new TestObject();
-		testObject.save({foo: "bar"}, {
-		  success: function(object) {
-		    alert("yay! it worked");
+
+		var Node = Parse.Object.extend("Node");
+		var node = new Node();
+		node.save({lat:lat, lng:lng}, {
+			success: function(object) {
+		    console.log("Node(" + lat + ", " + lng + ") saved!");
 		  }
 		});
 	}
