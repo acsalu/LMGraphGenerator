@@ -2,11 +2,12 @@ var map;
 
 //index is the title of the marker, the content is the id to query parse.
 var nodeArray;
+var nodeCoordinateArray;
 // in order to get the marker and get lat and lng
 var markers;
 //save id, node1id, node2id, length
 var edgeTable;
-
+var edgeTableId;
 
 canSelectPin = false;
 isFirstTime = true;
@@ -20,10 +21,12 @@ highlightPinColor = "FFFF46";
 
 function initialize() {
 
-
     nodeArray = new Array();
+    nodeCoordinateArray = new Array();
     markers = new Array();
     edgeTable = new Array();
+
+    createEdgeTable();
 
     var mapOptions = {
       center: new google.maps.LatLng(23.597, 121.644),
@@ -56,9 +59,12 @@ function initialize() {
     	    	
 		//build edge
 		var newEdge = {edgeId:edgeTable.length,  node1Id:currentSelectedPin, node2Id: nodeArray.length};
+		
 		console.log("newEdge = ");
 		console.log(newEdge);
 		edgeTable.push(newEdge);
+		updateEdgeTable();
+		
 		//draw the edge
 		//save the length after the call back of parse.
 		var dist = drawEdgeWithCurrentSelectedPinAndJustPlacedMarkerLatAndLng(event.latLng.lat(),event.latLng.lng() );
@@ -116,6 +122,8 @@ function placeMarkerWithTitleIndexString(location, markerId) {
                   	console.log("newEdge = ");
                   	console.log(newEdge);
                   	edgeTable.push(newEdge);
+			//createEdge(currentSelectedPin, parseInt( marker.title), ,edgeTable.length );
+
 
 			drawEdgeWithCurrentSelectedPinAndJustPlacedMarkerLatAndLng( event.latLng.lat(),event.latLng.lng() );
 			//have to do some saving stuff here.
@@ -154,7 +162,7 @@ function getPinIcon(pinColor) {
 function createNode(lat, lng) {
     console.log("create-node");
 
-    var Node = Parse.Object.extend("Node", {
+    var Node = Parse.Object.extend("HeartMapNode", {
         getId: function() {
             return this.get("objectId");
         }
@@ -178,19 +186,96 @@ function createNode(lat, lng) {
     return node;
 }
 
-function createEdge(node1, node2) {
+function createEdge(_node1, _node2, length, edgeId, latlng1, latlng2) {
     console.log("create-edge");
 
-    var Edge = Parse.Object.extend("Edge");
+    var Edge = Parse.Object.extend("HeartMapEdge");
     var edge = new Edge();
-    edge.save({node1:node1, node2:node2}), {
-           success: function(object) {
-            
-        }
-    }
+    var Node = Parse.Object.extend("HeartMapNode");
+    var query = new Parse.Query(Node);
+    query.get(nodeArray[_node1], {
+  	success: function(node1) {
+    	// The object was retrieved successfully.
+	var query2 = new Parse.Query(Node);
+	query.get(nodeArray[_node2],{
+	    success: function(node2){
+		console.log("node2 get");
+		edge.set("node1",node1);
+		edge.set("node2",node2);
+		edge.set("edgeId",edgeId);
+		edge.set("length",length);
+		//console.log("QQQQQQ");
+		//console.log(node1.lat);
+		//console.log(node2.lat);
+		console.log(node1);
+		console.log(markers[node1]);
+	
+		lat1 = markers[_node1].position.lat();
+		lng1 = markers[_node1].position.lng();
+		lat2 = markers[_node2].position.lat();
+		lng2 = markers[_node2].position.lng();
+		edge.set("bearing1",getBearing(lat1, lng1, lat2, lng2 ) );
+		edge.set("bearing2",getBearing(lat2, lng2, lat1, lng1 ) );
+		edge.save();
+	    },
+	    error: function(object, error){
+		console.log("node2 failed to get in createEdge");
+		console.log(error);
+	    }
+	});
+
+
+    	},
+  	error: function(object, error) {
+    	// The object was not retrieved successfully.
+    	// error is a Parse.Error with an error code and description.
+    	}
+    });
+
 
 
 }
+
+function createEdgeTable(){
+    console.log("create-edgetable");
+    var EdgeTable = Parse.Object.extend("EdgeTable");
+    var _edgeTable = new EdgeTable();
+    _edgeTable.set("table", edgeTable);
+    _edgeTable.save(null,{
+	success: function(object){
+	    console.log("edgeTable inited");
+	    console.log("id = " + _edgeTable.id );
+	    edgeTableId = _edgeTable.id;
+	},
+	error: function(object, error) {
+        // The object was not retrieved successfully.
+        // error is a Parse.Error with an error code and description.
+        console.log("retreival failed QQ, can't draw");
+      }
+
+
+    });
+
+}
+
+function updateEdgeTable(){
+    console.log("updateEdgeTable");
+    var EdgeTable = Parse.Object.extend("EdgeTable");
+    var _edgeTable = new EdgeTable();
+    _edgeTable.get(edgeTableId,{
+	success: function(object){
+	    console.log("got edgeTable");
+	    _edgeTable.set("table",edgeTable);
+	    _edgeTable.save();
+
+	},
+	error: function(object, error){
+	    console.log("update edgeTable failed");
+	}
+    });
+
+}
+
 
 //get the lat and lng of current selected by querying Parse.
 function drawEdgeWithCurrentSelectedPinAndJustPlacedMarkerLatAndLng(lat,lng){
@@ -198,7 +283,7 @@ function drawEdgeWithCurrentSelectedPinAndJustPlacedMarkerLatAndLng(lat,lng){
     var currentLat; 
     var currentLng;
 
-    var Node = Parse.Object.extend("Node");
+    var Node = Parse.Object.extend("HeartMapNode");
     var query = new Parse.Query(Node);
     query.get(nodeArray[currentSelectedPin], {
       success: function(node) {
@@ -230,6 +315,9 @@ function drawEdgeWithCurrentSelectedPinAndJustPlacedMarkerLatAndLng(lat,lng){
     	//console.log(pointDist);
 	edgeTable[edgeTable.length-1].length = pointDist;
 	console.log(edgeTable);
+
+	createEdge(currentSelectedPin, edgeTable[edgeTable.length-1].node2Id, pointDist ,edgeTable.length );
+
 	//return pointDist;
 
       },
@@ -256,7 +344,7 @@ Number.prototype.toRad = function() {
 //updateNodeWithEdgeId after calculating bearing.
 function calculateBearingWithCurrentMarkerAndPressedMarkerLatLng(lat, lng){
     
-    var Node = Parse.Object.extend("Node");
+    var Node = Parse.Object.extend("HeartMapNode");
     var query = new Parse.Query(Node);
     query.get(nodeArray[currentSelectedPin], {
        success: function(node) {
@@ -284,32 +372,47 @@ function calculateBearingWithCurrentMarkerAndPressedMarkerLatLng(lat, lng){
 	//console.log( edgeTable[edgeTable.length-1] );
 	updateNodeWithEdgeId(edgeTable.length-1);
 	setTimeout(function(){
-	updateNode2WithEdgeId(edgeTable.length-1);
+	    updateNode2WithEdgeId(edgeTable.length-1);
 	},1000);
 	//save the new edge to parse.
-
 
        }
     
     });
 
-  
+}
+
+function getBearingsWithTwoCoordinates(latlng1, latlng2){
+
+    var lat1 = latlng1.lat().toRad();
+    var lng1 = latlng1.lng().toRad();
+    var lat2 = latlng2.lat().toRad();
+    var lng2 = latlng2.lng().toRad();
+    var dLon = (lng2-lng1).toRad();
+
+    var y = Math.sin(dLon) * Math.cos(lat2);
+    var x = Math.cos(lat1)*Math.sin(lat2) -
+        Math.sin(lat1)*Math.cos(lat2)*Math.cos(dLon);
+    var brng = Math.atan2(y, x).toDeg();
+
 
 }
 
-function getBearing(lat1, lng1, lat2, lng2){
 
-    console.log(lat1);
+function getBearing(lat1, lng1, lat2, lng2){
+    console.log("in getBearing");
+    //console.log(lat1);
     lat1 = lat1.toRad();
-    console.log(lat1);
+    //console.log(lat1);
     lng1 = lng1.toRad();
     lat2 = lat2.toRad();
     lng2 = lng2.toRad();    
-    dLon = (lng2 - lng1).toRad();
+    dLon = (lng2 - lng1);
     var y = Math.sin(dLon) * Math.cos(lat2);
     var x = Math.cos(lat1)*Math.sin(lat2) -
             Math.sin(lat1)*Math.cos(lat2)*Math.cos(dLon);
     var brng = Math.atan2(y, x).toDeg(); 
+    console.log(brng);
     return brng;
 
 }
@@ -328,7 +431,7 @@ function updateNodeWithEdgeId( edgeId ) {
     var node1ParseId = nodeArray[node1ToUpdateId];
     //var node2ParseId = nodeArray[node2ToUpdateId];
 
-    var Node = Parse.Object.extend("Node");
+    var Node = Parse.Object.extend("HeartMapNode");
     var query = new Parse.Query(Node);
     query.get(node1ParseId, {
        success: function(node) {
@@ -357,7 +460,7 @@ function updateNode2WithEdgeId( edgeId ){
     console.log("node2ParseId = " + node2ParseId);
 
 
-    var Node = Parse.Object.extend("Node");
+    var Node = Parse.Object.extend("HeartMapNode");
     var query2 = new Parse.Query(Node);
     query2.get(node2ParseId,{
 	success: function(node2){
